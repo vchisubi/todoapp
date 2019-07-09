@@ -11,83 +11,83 @@
 //When user inputs text into textbox, clicking enter will submit it
 var inputByEnter = document.getElementById("textbox");
 
-inputByEnter.addEventListener("keyup", function(event){
-	//13 signifies the Enter key
-	if(event.keyCode === 13){	
-		//This cancels the default action if necessary
-		event.preventDefault();
-		//Call the addItem() function below
-		addItem();
-	}
+inputByEnter.addEventListener("keyup", function (event) {
+  //13 signifies the Enter key
+  if (event.keyCode === 13) {
+    //This cancels the default action if necessary
+    event.preventDefault();
+    //Call the addItem() function below
+    addItem();
+  }
 });
 
 
 //Create a new item on the list
-function addItem() {
+function addItem () {
 
-	//Create new list element
-	var li = document.createElement("li");
+  //Create new list element
+  var li = document.createElement("li");
 
-	//Set a 'contentEditable' attribute to keep track of whether checkbox is checked
-	li.setAttribute('contentEditable', 'false');
+  //Set a 'contentEditable' attribute to keep track of whether checkbox is checked
+  li.setAttribute('contentEditable', 'false');
 
-	//Create a checkbox
-	var checkbox = document.createElement("INPUT");
-	checkbox.setAttribute("type", "checkbox");
-	// checkbox.setAttribute("onclick", "toggleChecked();") //no longer needed
-	checkbox.className += ' listcheckbox';
-	li.appendChild(checkbox);
+  //Create a checkbox
+  var checkbox = document.createElement("INPUT");
+  checkbox.setAttribute("type", "checkbox");
+  // checkbox.setAttribute("onclick", "toggleChecked();") //no longer needed
+  checkbox.className += ' listcheckbox';
+  li.appendChild(checkbox);
 
-	//Fetch the user input data
-	var inputItem = document.getElementById("textbox").value;
+  //Fetch the user input data
+  var inputItem = document.getElementById("textbox").value;
 
-	//Create a text node with the input data
-	// var newNode = document.createTextNode(inputItem);
-	// li.appendChild(newNode);
+  //Create a text node with the input data
+  // var newNode = document.createTextNode(inputItem);
+  // li.appendChild(newNode);
 
-	//Check if there is an input
-	if(inputItem === ''){
-		alert("Please enter a to-do task!");
-	}
+  //Check if there is an input
+  if (inputItem === '') {
+    alert("Please enter a to-do task!");
+  }
 
-	else{
-		document.getElementById("list").appendChild(li);
-	}
+  else {
+    document.getElementById("list").appendChild(li);
+  }
 
-	//TRY LABEL
-	var span3 = document.createElement("LABEL");
-	var txt3 = document.createTextNode(inputItem);
-	span3.appendChild(txt3);
-	span3.className = "listdata";
-	li.appendChild(span3);
-	//TRY LABEL
+  //TRY LABEL
+  var span3 = document.createElement("LABEL");
+  var txt3 = document.createTextNode(inputItem);
+  span3.appendChild(txt3);
+  span3.className = "listdata";
+  li.appendChild(span3);
+  //TRY LABEL
 
-	//TRY THIS - Contain in SPAN
-	// var span2 = document.createElement("SPAN");
-	// var txt2 = document.createTextNode(inputItem);
-	// span2.appendChild(txt2);
-	// span2.className = "listdata";
-	// li.appendChild(span2);
-	//TRY THIS
+  //TRY THIS - Contain in SPAN
+  // var span2 = document.createElement("SPAN");
+  // var txt2 = document.createTextNode(inputItem);
+  // span2.appendChild(txt2);
+  // span2.className = "listdata";
+  // li.appendChild(span2);
+  //TRY THIS
 
-	document.getElementById("textbox").value = "";
+  document.getElementById("textbox").value = "";
 
-	var span = document.createElement("SPAN");
+  var span = document.createElement("SPAN");
 
-	var txt = document.createTextNode(" \u00D7");
+  var txt = document.createTextNode(" \u00D7");
 
-	span.className = "close";
+  span.className = "close";
 
-	span.appendChild(txt);
+  span.appendChild(txt);
 
-	li.appendChild(span);
+  li.appendChild(span);
 
-	for(i = 0; i < close.length; i++){
-		close[i].onclick = function(){
-			var div = this.parentElement;
-			div.style.display = "none";
-		}
-	}
+  for (i = 0; i < close.length; i++) {
+    close[i].onclick = function () {
+      var div = this.parentElement;
+      div.style.display = "none";
+    }
+  }
 }
 
 
@@ -118,27 +118,27 @@ function addItem() {
 
 //Clicking on the close button hides the task
 var close = document.getElementsByClassName("close");
-for(i = 0; i < close.length; i++){
-	close[i].onclick = function (){
-		var div = close[i].parentElement;
-		console.log(div);
-		div.remove();
-	}
+for (i = 0; i < close.length; i++) {
+  close[i].onclick = function () {
+    var div = close[i].parentElement;
+    console.log(div);
+    div.remove();
+  }
 }
 
 //Function for showing all the tasks via allButton
-function showAll(){
-	var x = document.getElementsByTagName("LI");
+function showAll () {
+  var x = document.getElementsByTagName("LI");
 
-	for(i = 0; i < x.length; i++){
-		if(x[i].style.display === "none"){
-			x[i].style.display = "block";
-		}
-		else{
-			//This enables toggle functionality
-			//x[i].style.display = "none";
-		}
-	}
+  for (i = 0; i < x.length; i++) {
+    if (x[i].style.display === "none") {
+      x[i].style.display = "block";
+    }
+    else {
+      //This enables toggle functionality
+      //x[i].style.display = "none";
+    }
+  }
 }
 
 //When user checks checkbox, toggles a 'contentEditable' attribute in the LI element, true or false
@@ -153,12 +153,12 @@ function showAll(){
 // 			var y = x[i].parentElement;
 // 			y.setAttribute('contentEditable', 'true');
 // 			// x.getAttribute('contentEditable') = 'true';
-// 		}	
+// 		}
 // 		//
 // 		else if(x[i].unchecked){
 // 		 	var y = x[i].parentElement;
 // 		 	y.setAttribute('contentEditable', 'false');
-// 		}		
+// 		}
 // 	}
 // }
 
@@ -174,7 +174,7 @@ function showAll(){
 // 			}
 // 			else{
 // 				x[i].style.display = "none";					//Currently toggles because uncheck doesnt set contentEdited back to false
-// 			}			
+// 			}
 // 		}
 // 		else{
 
@@ -184,44 +184,44 @@ function showAll(){
 // }
 
 //Second idea for showing all the active tasks via activeButton
-function showActive(){
+function showActive () {
 
-	var x = document.getElementsByClassName("listcheckbox")
+  var x = document.getElementsByClassName("listcheckbox")
 
-	for(i = 0; i < x.length; i++){
+  for (i = 0; i < x.length; i++) {
 
-		if(x[i].checked){
-			var y = x[i].parentElement;
-			y.style.display = "none";
-			
-		}	
-		
-		else{
-		 	var y = x[i].parentElement;
-		 	y.style.display = "block";
-		}		
-	}
+    if (x[i].checked) {
+      var y = x[i].parentElement;
+      y.style.display = "none";
+
+    }
+
+    else {
+      var y = x[i].parentElement;
+      y.style.display = "block";
+    }
+  }
 }
 
 //Function for showing all the completed tasks via activeButton
-function showDone(){
+function showDone () {
 
-	var x = document.getElementsByClassName("listcheckbox")
+  var x = document.getElementsByClassName("listcheckbox")
 
-	for(i = 0; i < x.length; i++){
+  for (i = 0; i < x.length; i++) {
 
 
-		if(x[i].checked){
-		 	var y = x[i].parentElement;
-		 	y.style.display = "block";
-		}
+    if (x[i].checked) {
+      var y = x[i].parentElement;
+      y.style.display = "block";
+    }
 
-		else{
-			var y = x[i].parentElement;
-			y.style.display = "none";
-			
-		}	
-	}
+    else {
+      var y = x[i].parentElement;
+      y.style.display = "none";
+
+    }
+  }
 }
 
 
