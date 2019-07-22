@@ -1,9 +1,5 @@
-//Array that stores the todo tasks
-var todoTasks = [];
-//Array that stores all the active tasks
-var activeTasks = [];
-//Array that stores all the completed tasks
-var completedTasks = [];
+//Kelvin's API link
+const url = 'https://kelyvin-todo-api.herokuapp.com/';
 //Stores the div element that houses the UL and its LI elements
 var todoContainer = document.getElementById("divContainer");
 //Stores the textbox object
@@ -16,8 +12,144 @@ var allButton = document.getElementById("allButton");
 var activeButton = document.getElementById("activeButton");
 //Store the button that shows all completed tasks
 var doneButton = document.getElementById("doneButton");
-//Store the current view of the webpage (All/Active/Completed)
-var currView = 'ALL';
+//Clear button
+var clearButton = document.getElementById("clearButton");
+
+function postTodo(inputField){
+  var data = {};
+  data.title = inputField;
+  data.order = 0;
+  data.completed = false;
+  var json = JSON.stringify(data);
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', url, true);
+  xhr.setRequestHeader('Content-type', 'application/json');  
+  xhr.onload = () => {
+    if(xhr.readyState === 4 && xhr.status === 200){
+      let result = asyncGetAll().then((taskArray)=>{
+        //console.log(taskArray);
+        sortAndDisplayArray(taskArray);
+      });
+    }
+    else{console.log('ERROR trying to add task');}
+  };
+  xhr.send(json);
+}
+
+//Removes a task from the array when its close button is clicked
+function obliterateTask(id){
+  let xhr = new XMLHttpRequest();
+  xhr.open('DELETE', url + id, true);
+  xhr.onload = () => {
+    if(xhr.readyState === 4 && xhr.status === 200){
+      let result = asyncGetAll().then((taskArray)=>{
+        console.log('Deleted task ' + id + ':' + taskArray);
+        sortAndDisplayArray(taskArray);
+      });
+    }
+    else{console.log('ERROR during deletion of task');}
+  };
+  xhr.send(null);
+}
+
+//When the user checks the checkbox for a task, update the completed property of the task
+function patchTask(id, toggle){
+  var data = {};
+  data.completed = toggle;
+  var json = JSON.stringify(data);
+  let xhr = new XMLHttpRequest();
+  xhr.open('PATCH', url + id, true);
+  xhr.setRequestHeader('Content-type', 'application/json');  
+  xhr.onload = () => {
+    if(xhr.readyState === 4 && xhr.status === 200){
+        console.log('Patched task ' + id + ':' + xhr.responseText);
+    }
+    else{console.log('ERROR during updating of task');}
+  };
+  xhr.send(json);  
+}
+
+function rerender(inputArray){
+  //Clear the current UL (gets rid of all current LI's)
+  todoContainer.innerHTML = '';
+  //Create a UL parent to append to
+  var listWrapperUL = document.createElement('UL');
+
+  inputArray.forEach(function (todoItem, index){
+    var taskName = todoItem.title;
+    //Create LI element
+    var listEle = createLI();
+    //Set an identifier the list
+    listEle.setAttribute("list-id", todoItem.id);
+    //Create checkbox element
+    var checkboxEle = createCheckbox();
+    //If the checkbox was checked before a rerender, display it as checked
+    if(todoItem.completed){
+      checkboxEle.checked = true;
+    }
+    //Sets it so that when the checkbox is checked or unchecked, changes the checked property accordingly
+    checkboxEle.addEventListener('change', function(event){
+      //If it was checked before, change it to unchecked
+      let listEle = this.parentElement;
+      let currId = listEle.getAttribute('list-id');
+      if(todoItem.completed){
+        todoItem.completed = false;
+        //Call the patch method to update by id
+        patchTask(currId, false);
+      }
+      //Otherwise, change it to checked
+      else{
+        todoItem.completed = true;
+        patchTask(currId, true);
+      }
+      //console.log(todoTasks);
+    });
+    //Create span element for task
+    var taskEle = createTask(taskName);
+    //Create delete button element
+    var deleteEle = createDelete();
+    //Sets it so that when the close button is clicked, triggers delete task method
+    deleteEle.addEventListener('click', function(event){
+      obliterateTask(todoItem.id);
+    });
+    listEle.appendChild(checkboxEle);
+    listEle.appendChild(taskEle);
+    listEle.appendChild(deleteEle);
+    listWrapperUL.appendChild(listEle);
+  })
+  todoContainer.appendChild(listWrapperUL);
+}
+
+async function asyncGetAll(){
+  let result = await getAllTodos();
+  let resultParsed = JSON.parse(result);
+  return resultParsed;
+}
+
+function getAllTodos(){
+  return new Promise(function (resolve, reject){
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.onload = function(){
+      if(this.status >= 200 && this.status < 300){
+        resolve(xhr.response);
+      }
+      else{
+        reject({
+          status: this.status,
+          statusText: xhr.statusText
+        });
+      }
+    };
+    xhr.onerror = function(){
+      reject({
+        status: this.status,
+        statusText: xhr.statusText
+      });
+    };
+    xhr.send();
+  });
+}
 
 //When user inputs text into textbox, clicking enter will submit it
 inputByEnter.addEventListener("keyup", function(event){
@@ -34,7 +166,8 @@ inputByEnter.addEventListener("keyup", function(event){
     }
 
     else{
-      addTask(inputItem);
+      // addTask(inputItem);
+      postTodo(inputItem);
       inputByEnter.value = "";
     }
   }
@@ -50,7 +183,7 @@ inputBySubmit.addEventListener("click", function(event){
   }
 
   else{
-    addTask(inputItem);
+    postTodo(inputItem);
     inputByEnter.value = "";
   }
 });
@@ -70,116 +203,13 @@ doneButton.addEventListener("click", function(event){
   showDone();
 });
 
-//Add a an input task
-function addTask(inputTask){
-  const todo = {
-    inputTask,
-    checked: false,
-    id: Date.now()
-  };
-
-  todoTasks.push(todo);
-  console.log(todoTasks);
-
-  rerender(todoTasks);
-}
-
-// //Removes a task from the array when its close button is clicked
-function obliterateTask(index, id){
-  if(currView === 'ACTIVE'){
-    const currId = id;
-    activeTasks.splice(index, 1);
-    rerender(activeTasks);
-
-    //Look for the task to delete in todoTasks via id
-    for(i = 0; i , todoTasks.length; i++){
-      console.log(currId);
-      console.log(todoTasks[i].id);
-      if(todoTasks[i].id == currId){
-        todoTasks.splice(i, 1);
-      }
-    }
-  }
-  else if(currView === 'COMPLETED'){
-    const currId = id;
-    completedTasks.splice(index, 1);
-    rerender(completedTasks);
-
-    //Look for the task to delete in todoTasks via id
-    for(i = 0; i , todoTasks.length; i++){
-      console.log(currId);
-      console.log(todoTasks[i].id);
-      if(todoTasks[i].id == currId){
-        todoTasks.splice(i, 1);
-      }
-    }
-  }
-  else if(currView === 'ALL'){
-    todoTasks.splice(index, 1);
-    rerender(todoTasks);
-  }
-}
-
-//Rerender the todo list
-function rerender(inputArray){
-  //Clear the current UL (gets rid of all current LI's)
+//Clear all tasks from the todo list when the clearButtpn is clicked
+clearButton.addEventListener("click", function(event){
+  const xhr = new XMLHttpRequest();
+  xhr.open('DELETE', url);
+  xhr.send(null);
   todoContainer.innerHTML = '';
-
-  //Create a UL parent to append to
-  var listWrapperUL = document.createElement('UL');
-
-  //Construct new todos for the list
-  inputArray.forEach(function (todoItem, index){
-
-    var taskName = todoItem.inputTask;
-
-    //Create LI element
-    var listEle = createLI();
-
-    //Create checkbox element
-    var checkboxEle = createCheckbox();
-
-    //If the checkbox was checked before a rerender, display it as checked
-    if(todoItem.checked){
-      checkboxEle.checked = true;
-    }
-    
-    //Sets it so that when the checkbox is checked or unchecked, changes the checked property accordingly
-    checkboxEle.addEventListener('change', function(event){
-      //If it was checked before, change it to unchecked
-      if(todoItem.checked){
-        console.log(todoItem.checked)
-        todoItem.checked = false;
-      }
-      //Otherwise, change it to checked
-      else{
-        todoItem.checked = true;
-      }
-      console.log(todoTasks);
-
-    });
-
-    //Create span element for task
-    var taskEle = createTask(taskName);
-    //Create delete button element
-    var deleteEle = createDelete();
-
-    //Sets it so that when the close button is clicked, triggers delete task method
-    deleteEle.addEventListener('click', function(event){
-      obliterateTask(index, todoItem.id);
-    });
-
-    listEle.appendChild(checkboxEle);
-    listEle.appendChild(taskEle);
-    listEle.appendChild(deleteEle);
-
-    //Append each list child to the UL parent
-    listWrapperUL.appendChild(listEle);
-
-  })
-  //Append the UL parent to the div container in the index.html
-  todoContainer.appendChild(listWrapperUL);
-}
+});
 
 //Create an LI element
 function createLI(){
@@ -216,42 +246,48 @@ function createDelete(){
 
 //Function for showing all the tasks via allButton
 function showAll(){
-
-  currView = 'ALL';
-
-  rerender(todoTasks);
+  let result = asyncGetAll().then((taskArray)=>{
+    sortAndDisplayArray(taskArray);
+  });
 }
 
 //Retrieve the active tasks from todoTasks and store it in a separate array, then display
 function showActive(){
-
-  currView = 'ACTIVE';
-
-  activeTasks = [];
-
-  todoTasks.forEach(function (todoItem, index){
-    //If the task is checked, add to activeTasks array
-    if(todoItem.checked === false){
-      activeTasks.push(todoItem);
-    }
+  let activeArray = [];
+  let result = asyncGetAll().then((taskArray)=>{
+    taskArray.forEach(function (todoItem){
+      //If the task is checked, add to activeTasks array
+      if(todoItem.completed === false){
+        activeArray.push(todoItem);
+      }
+    });
+    rerender(activeArray);
   });
-
-  rerender(activeTasks);
 }
 
 //Retrieve the completed tasks from todoTasks and store it in a separate array, then display
 function showDone(){
-
-  currView = 'COMPLETED';
-
-  completedTasks = [];
-
-  todoTasks.forEach(function (todoItem, index){
-    //If the task is checked, add to activeTasks array
-    if(todoItem.checked){
-      completedTasks.push(todoItem);
-    }
+  let doneArray = [];
+  let result = asyncGetAll().then((taskArray)=>{
+    taskArray.forEach(function (todoItem){
+      //If the task is checked, add to activeTasks array
+      if(todoItem.completed === true){
+        doneArray.push(todoItem);
+      }
+    });
+    rerender(doneArray);
   });
+}
 
-  rerender(completedTasks);
+//Sort the array of tasks by id then display them
+function sortAndDisplayArray(){
+  let sortedArray = [];
+  let result = asyncGetAll().then((taskArray)=>{
+    let sortedArray = taskArray.sort(function(a,b){
+      console.log(a.id - b.id);
+      return a.id - b.id;
+    });
+    sortedArray = taskArray;
+    rerender(sortedArray);
+  });
 }

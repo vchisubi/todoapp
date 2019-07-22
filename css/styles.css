@@ -10,7 +10,6 @@
   align-self: center;
   background-color: #6495ED;
   border: 5px black;
-
 }
 
 input{
@@ -28,11 +27,11 @@ input#todoInput{
 
 .list-checkbox{
   cursor: pointer;
-  padding: 5px;
+  margin: 12px 20px 12px 16px;
 }
 
 .obliterate{
-  cursor: pointer
+  cursor: pointer;
   right: 0;
   top: 0;
   padding: 12px 16px 12px 16px;
@@ -133,8 +132,24 @@ h1{
 
 /** Tablet devices **/
 @media (min-width: 768px) and (max-width: 991px){
+  .columnize{
+    width: 50% - 10px;
+    float: center;
+    padding: 5px;
+    border: 1px solid light blue;
+    text-align: center;
+    margin-left: 5px;
+  }
 }
 
 /** Mobile devices **/
 @media (max-width: 767px){
+  .columnize{
+    width: 1000px;
+    float: center;
+    padding: 5px;
+    border: 1px solid light gray;
+    text-align: center;
+    margin-left: 5px;
+  }
 }
