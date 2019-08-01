@@ -1,9 +1,5 @@
-//Array that stores the todo tasks
-var todoTasks = [];
-//Array that stores all the active tasks
-var activeTasks = [];
-//Array that stores all the completed tasks
-var completedTasks = [];
+//Kelvin's API link
+const urlGlobal = 'https://kelyvin-todo-api.herokuapp.com/';
 //Stores the div element that houses the UL and its LI elements
 var todoContainer = document.getElementById("divContainer");
 //Stores the textbox object
@@ -16,8 +12,188 @@ var allButton = document.getElementById("allButton");
 var activeButton = document.getElementById("activeButton");
 //Store the button that shows all completed tasks
 var doneButton = document.getElementById("doneButton");
-//Store the current view of the webpage (All/Active/Completed)
-var currView = 'ALL';
+//Clear button
+var clearButton = document.getElementById("clearButton");
+
+//Global todo list variable
+var allTasks = [];
+var activeTasks = [];
+var doneTasks = [];
+
+function loadPage(){
+  updateAndSort().then((taskArray)=>{
+    //console.log(taskArray);
+    rerender(taskArray);
+  });
+}
+
+function handleRequest(requestType, url, toggle = false, task = 'placeholder'){
+  
+  var request = requestType;
+  var currUrl = url;          //If id is needed (get, delete, or patch), pass it in as URL+ID
+  var trueOrFalse = toggle;
+  var todo = task;
+
+  if(request === 'GETALL'){
+    request = 'GET';
+  }
+
+  else if(request === 'DELETEALL'){
+    request = 'DELETE';
+  }
+
+  if(request === 'POST' || request === 'PATCH'){
+    var data = {};
+      if(request === 'POST'){
+        data.title = todo;
+        data.completed = false;
+      }
+      else{
+        data.completed = trueOrFalse;
+      }
+      var jsonData = JSON.stringify(data);
+  }
+  return new Promise(function (resolve, reject){
+    let xhr = new XMLHttpRequest();
+    xhr.open(request, currUrl, true);
+    xhr.setRequestHeader('Content-type', 'application/json'); 
+    if(request === 'GET' || request === 'DELETE'){
+      xhr.send();
+    }
+    else{
+      xhr.send(jsonData);
+    }
+    xhr.onload = () => {
+      if(xhr.readyState == 4 && xhr.status === 200){
+        if(requestType === 'DELETEALL'){
+          todoContainer.innerHTML = '';
+          allTasks = [];
+          activeTasks = [];
+          doneTasks = [];
+          resolve();
+        }
+        else if(request === 'POST' || request === 'DELETE' || request === 'PATCH'){
+          //Get the updated todo list
+          //allTasks = handleRequest('GET', urlGlobal);
+          if(request === 'POST' || request === 'DELETE'){
+            //Sort and display the todo list
+            resolve(updateAndSort().then((taskArray)=>{rerender(taskArray);}));
+          }
+          else if(request === 'PATCH'){
+            resolve(updateAndSort());     //Write another method for this???
+          }
+        }
+        else if(request === 'GET'){
+          //console.log(JSON.parse(xhr.response));
+          resolve(JSON.parse(xhr.response));
+        }
+      }
+      else{
+        reject(console.error("Error occurred"));
+      }
+    }
+    xhr.onerror = () => {
+      reject(console.error("Error occurred")); 
+    }
+  });
+}
+
+//Updates the global arrays
+async function updateAndSort(){
+
+  allTasks = [];
+  activeTasks = [];
+  doneTasks = [];
+
+  let resultArray = await handleRequest('GETALL', urlGlobal);
+
+  let sortedArray = resultArray.sort(function(a,b){
+    //console.log(a.id - b.id);
+    return a.id - b.id;
+  });
+
+  allTasks = sortedArray;
+
+  allTasks.forEach(function (todoItem){
+    //If the task is checked, add to activeTasks array
+    if(todoItem.completed === false){
+      activeTasks.push(todoItem);
+    }
+    else{
+      doneTasks.push(todoItem);
+    }
+  });
+  return allTasks;
+}
+
+function postTodo(inputField){
+  handleRequest('POST', urlGlobal, undefined, inputField);
+}
+
+function obliterateTask(id){
+  handleRequest('DELETE', urlGlobal + id);
+}
+
+function patchTask(id, toggle){
+  handleRequest('PATCH', urlGlobal + id, toggle); 
+}
+
+function rerender(inputArray){
+  //Clear the current UL (gets rid of all current LI's)
+  todoContainer.innerHTML = '';
+  //Create a UL parent to append to
+  var listWrapperUL = document.createElement('UL');
+  //Go thru each task in the array and display them
+  inputArray.forEach(function (todoItem, index){
+    var taskName = todoItem.title;
+    //Create LI element
+    var listEle = createLI();
+    //Set an identifier the list
+    listEle.setAttribute("list-id", todoItem.id);
+    //Create checkbox element
+    var checkboxEle = createCheckbox();
+    //If the checkbox was checked before a rerender, display it as checked
+    if(todoItem.completed){
+      checkboxEle.checked = true;
+    }
+    //Sets it so that when the checkbox is checked or unchecked, changes the checked property accordingly
+    checkboxEle.addEventListener('change', function(event){
+      //If it was checked before, change it to unchecked
+      let listEle = this.parentElement;
+      let currId = listEle.getAttribute('list-id');
+      if(todoItem.completed){
+        todoItem.completed = false;
+        //Call the patch method to update by id
+        patchTask(currId, false);
+      }
+      //Otherwise, change it to checked
+      else{
+        todoItem.completed = true;
+        patchTask(currId, true);
+      }
+      //console.log(todoTasks);
+    });
+    //Create span element for task
+    var taskEle = createTask(taskName);
+    //Create delete button element
+    var deleteEle = createDelete();
+    //Sets it so that when the close button is clicked, triggers delete task method
+    deleteEle.addEventListener('click', function(event){
+      obliterateTask(todoItem.id);
+    });
+    listEle.appendChild(checkboxEle);
+    listEle.appendChild(taskEle);
+    listEle.appendChild(deleteEle);
+    listWrapperUL.appendChild(listEle);
+  })
+  todoContainer.appendChild(listWrapperUL);
+}
+
+function getAllTodos(){
+  handleRequest('GETALL', urlGlobal);
+  //This returns an array
+  let taskArray = handleRequest('GETALL', urlGlobal).then((taskArray)=>{console.log(taskArray);});
+}
 
 //When user inputs text into textbox, clicking enter will submit it
 inputByEnter.addEventListener("keyup", function(event){
@@ -34,7 +210,8 @@ inputByEnter.addEventListener("keyup", function(event){
     }
 
     else{
-      addTask(inputItem);
+      // addTask(inputItem);
+      postTodo(inputItem);
       inputByEnter.value = "";
     }
   }
@@ -50,140 +227,34 @@ inputBySubmit.addEventListener("click", function(event){
   }
 
   else{
-    addTask(inputItem);
+    postTodo(inputItem);
     inputByEnter.value = "";
   }
 });
 
 //call the showAll method when the showAll button is clicked
 allButton.addEventListener("click", function(event){
-  showAll();
+  displayView(allTasks);
 });
 
 //call the showActive method when the showActive button is clicked
 activeButton.addEventListener("click", function(event){
-  showActive();
+  displayView(activeTasks);
 });
 
 //call the showDone method when the showDone button is clicked
 doneButton.addEventListener("click", function(event){
-  showDone();
+  displayView(doneTasks);
 });
 
-//Add a an input task
-function addTask(inputTask){
-  const todo = {
-    inputTask,
-    checked: false,
-    id: Date.now()
-  };
-
-  todoTasks.push(todo);
-  console.log(todoTasks);
-
-  rerender(todoTasks);
-}
-
-// //Removes a task from the array when its close button is clicked
-function obliterateTask(index, id){
-  if(currView === 'ACTIVE'){
-    const currId = id;
-    activeTasks.splice(index, 1);
-    rerender(activeTasks);
-
-    //Look for the task to delete in todoTasks via id
-    for(i = 0; i , todoTasks.length; i++){
-      console.log(currId);
-      console.log(todoTasks[i].id);
-      if(todoTasks[i].id == currId){
-        todoTasks.splice(i, 1);
-      }
-    }
-  }
-  else if(currView === 'COMPLETED'){
-    const currId = id;
-    completedTasks.splice(index, 1);
-    rerender(completedTasks);
-
-    //Look for the task to delete in todoTasks via id
-    for(i = 0; i , todoTasks.length; i++){
-      console.log(currId);
-      console.log(todoTasks[i].id);
-      if(todoTasks[i].id == currId){
-        todoTasks.splice(i, 1);
-      }
-    }
-  }
-  else if(currView === 'ALL'){
-    todoTasks.splice(index, 1);
-    rerender(todoTasks);
-  }
-}
-
-//Rerender the todo list
-function rerender(inputArray){
-  //Clear the current UL (gets rid of all current LI's)
-  todoContainer.innerHTML = '';
-
-  //Create a UL parent to append to
-  var listWrapperUL = document.createElement('UL');
-
-  //Construct new todos for the list
-  inputArray.forEach(function (todoItem, index){
-
-    var taskName = todoItem.inputTask;
-
-    //Create LI element
-    var listEle = createLI();
-
-    //Create checkbox element
-    var checkboxEle = createCheckbox();
-
-    //If the checkbox was checked before a rerender, display it as checked
-    if(todoItem.checked){
-      checkboxEle.checked = true;
-    }
-    
-    //Sets it so that when the checkbox is checked or unchecked, changes the checked property accordingly
-    checkboxEle.addEventListener('change', function(event){
-      //If it was checked before, change it to unchecked
-      if(todoItem.checked){
-        console.log(todoItem.checked)
-        todoItem.checked = false;
-      }
-      //Otherwise, change it to checked
-      else{
-        todoItem.checked = true;
-      }
-      console.log(todoTasks);
-
-    });
-
-    //Create span element for task
-    var taskEle = createTask(taskName);
-    //Create delete button element
-    var deleteEle = createDelete();
-
-    //Sets it so that when the close button is clicked, triggers delete task method
-    deleteEle.addEventListener('click', function(event){
-      obliterateTask(index, todoItem.id);
-    });
-
-    listEle.appendChild(checkboxEle);
-    listEle.appendChild(taskEle);
-    listEle.appendChild(deleteEle);
-
-    //Append each list child to the UL parent
-    listWrapperUL.appendChild(listEle);
-
-  })
-  //Append the UL parent to the div container in the index.html
-  todoContainer.appendChild(listWrapperUL);
-}
+clearButton.addEventListener("click", function(event){
+  handleRequest('DELETEALL', urlGlobal);
+});
 
 //Create an LI element
 function createLI(){
-  var listEle = document.createElement("LI", {class:'todo-item'});
+  var listEle = document.createElement("LI");
+  listEle.setAttribute('class', 'list-checkbox');
   return listEle;
 }
 
@@ -207,51 +278,13 @@ function createTask(taskItem){
 //Create a delete button element
 function createDelete(){
   var deleteEle = document.createElement("SPAN");
-  deleteEle.setAttribute('class', 'obliterate')
-  // deleteEle.setAttribute('onclick', 'removeTask()');
+  deleteEle.setAttribute('class', 'obliterate');
   var closeChar = document.createTextNode('\u00D7');
   deleteEle.appendChild(closeChar);
   return deleteEle;
 }
 
-//Function for showing all the tasks via allButton
-function showAll(){
-
-  currView = 'ALL';
-
-  rerender(todoTasks);
-}
-
-//Retrieve the active tasks from todoTasks and store it in a separate array, then display
-function showActive(){
-
-  currView = 'ACTIVE';
-
-  activeTasks = [];
-
-  todoTasks.forEach(function (todoItem, index){
-    //If the task is checked, add to activeTasks array
-    if(todoItem.checked === false){
-      activeTasks.push(todoItem);
-    }
-  });
-
-  rerender(activeTasks);
-}
-
-//Retrieve the completed tasks from todoTasks and store it in a separate array, then display
-function showDone(){
-
-  currView = 'COMPLETED';
-
-  completedTasks = [];
-
-  todoTasks.forEach(function (todoItem, index){
-    //If the task is checked, add to activeTasks array
-    if(todoItem.checked){
-      completedTasks.push(todoItem);
-    }
-  });
-
-  rerender(completedTasks);
+//Displays the desired view of the todo list via button click
+function displayView(viewArray){
+  rerender(viewArray);
 }
