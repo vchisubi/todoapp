@@ -4,7 +4,9 @@
 <head>
   <meta charset="utf-8">
   <title>What To Do Today?</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <meta name="author" content="Vincent Chien">
+  <meta name="description" content="ToDo List App">
+  <link rel="stylesheet" type="text/css" href="src/css/styles.css">
 </head>
 
 <body>
@@ -25,11 +27,23 @@
     <input id="allButton" class="all-button columnize" type="submit" value="Show All Tasks">
     <input id="activeButton" class="active-button columnize" type="submit" value="Show Active Tasks">
     <input id="doneButton" class="done-button columnize" type="submit" value="Show Completed Tasks">
+    <input id="clearButton" class="clear-button columnize" type="submit" value="Clear All Tasks">
   </div>
 
 </div>
 
-<script src="js/script.js"></script>
+<script type="text/javascript" src="src/js/app.js"></script>
+<script type="text/javascript" src="src/js/arrays/globalArrays.js"></script>
+<script type="text/javascript" src="src/js/configs/api.js"></script>
+<script type="text/javascript" src="src/js/elements/elementCreator.js"></script>
+<script type="text/javascript" src="src/js/elements/htmlElements.js"></script>
+<script type="text/javascript" src="src/js/enums/keyCodes.js"></script>
+<script type="text/javascript" src="src/js/utils/apiHelper.js"></script>
+<script type="text/javascript" src="src/js/utils/arrayHelper.js"></script>
+<script type="text/javascript" src="src/js/utils/requestHelper.js"></script>
+<script type="text/javascript" src="src/js/utils/taskAdder.js"></script>
+<script type="text/javascript" src="src/js/views/viewTasks.js"></script>
+<script type="text/javascript" src="src/js/todolist.js"></script>
 
 </body>
 
