@@ -19,7 +19,6 @@ Todolist.views.pages.main.todoContainer = (function(){
   var todoContainer = document.getElementById("divContainer");
 
   return {
-
     getContainer: function(){return todoContainer;}
   };
 }());
