@@ -3,6 +3,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const path = require('path');
+const controller = require('./services/db');
+const collection = 'todo';
 
 module.exports = function () {
 
@@ -30,7 +33,18 @@ module.exports = function () {
 
   start = function() {
     const port = process.env.PORT || 4001;
-    server.listen(port, () => {console.log(`Listening on port ${port}...`)});
+    //server.listen(port, () => {console.log(`Listening on port ${port}...`)});
+
+    //Connect to the DB
+    controller.connect((err) => {
+      if(err){
+        console.log('Unable to connect to the database!');
+        process.exit(1);
+      }
+      else{
+        server.listen(port, () => {console.log(`Listening on port ${port}...`)});
+      }
+    })
   };
 
   return {
