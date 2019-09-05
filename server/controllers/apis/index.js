@@ -2,43 +2,76 @@
 
 const express = require('express');
 const controller = require('../../services/db');
+const collection = 'todolist';
 
 let server = express.Router();
 
-server.get('/', (req, res, next) => {
-  let response = controller.getList();
+let currId = 1;
 
-  res.send(response);
+server.get('/',(req,res)=>{
+  controller.getDB().collection(collection).find({}).toArray((err,documents) => {
+		if(err)
+			console.log(err);
+		else{
+			res.json(documents);
+		}
+	});
 });
 
-server.get('/:id', (req, res, next) => {
-  let response = controller.getTask(req.params.id);
-
-  res.send(response);
+server.get('/:id', (req, res)=>{
+  let targetId = parseInt(req.params.id);
+  controller.getDB().collection(collection).find({"id" : targetId}).toArray((err,document) => {
+    if(err)
+        console.log(err);
+    else
+        res.json(document);
+  });
 });
 
-server.post('/', (req, res, next) =>{
-  let response = controller.createTask(req.body);
+server.post('/', (req, res) => {
+  const userInput = req.body;
+  const task = userInput.title;
 
-  res.send(response);
+  let response = {'id':currId, 'title':task, 'completed':false};
+
+  controller.getDB().collection(collection).insertOne(response, (err,result)=>{
+		if(err)
+			console.log(err);
+		else{
+      currId++;
+      res.json(response);
+			//res.json({result : result, document : result.ops[0], msg : "Successfully inserted Todo!!!"});
+		}
+	});
 });
 
-server.patch('/:id', (req, res, next) =>{
-  let response = controller.updateTask(req.body);
-
-  res.send(response);
+server.patch('/:id', (req, res) => {
+  let targetId = parseInt(req.params.id);
+  const userInput = req.body;
+  const toggle = userInput.completed;
+  controller.getDB().collection(collection).findOneAndUpdate({"id" : targetId},{$set : {"completed" : toggle}},{returnOriginal : false},(err,result)=>{
+    if(err)
+        console.log(err);
+    else
+        res.json(result);
+  });
 });
 
-server.delete('/', (req, res, next) =>{
-
-  res.send(controller.delAllTasks());
+server.delete('/', (req, res) => {
+  //let response = controller.getDB().collection(collection).find({}).toArray();
+  controller.getDB().collection(collection).deleteMany({}).then(result => {res.send(result);});
+  currId = 1;
 });
 
-server.delete('/:id', (req, res, next) =>{
-    console.log('Delete task with id: ' + req.params.id);
-  let response = controller.deleteTask(req.params.id);
-
-  res.send(response);
+server.delete('/:id', (req, res) => {
+  console.log('Deleting task with id: ' + req.params.id);
+  let targetId = parseInt(req.params.id);
+  controller.getDB().collection(collection).findOneAndDelete({"id" : targetId},(err,result)=>{
+    if(err)
+      console.log(err);
+    else
+      res.json(result);
+  });
 });
 
 module.exports = server;

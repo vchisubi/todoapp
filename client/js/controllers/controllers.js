@@ -81,7 +81,7 @@ Todolist.controllers.dataModifier = (function() {
   function getAllTodos(){
     Todolist.utils.apiHelper.handleRequest('GET', Todolist.configs.api.url);
     //This returns an array
-    let taskArray = Todolist.utils.apiHelper.handleRequest('GETALL', Todolist.configs.api.url).then((taskArray)=>{console.log(taskArray);});
+    //let responseArray = Todolist.utils.apiHelper.handleRequest('GET', Todolist.configs.api.url).then((taskArray)=>{console.log(taskArray);});
   }
 
   return {
