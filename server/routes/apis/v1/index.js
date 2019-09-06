@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const todolistController = require('../../../controllers/apis/index');
+const todolistController = require('../../../controllers/apis/todos/index');
 
 let router = express.Router();
 

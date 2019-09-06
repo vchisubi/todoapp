@@ -13,8 +13,6 @@ function init(server) {
     // });
 
     server.use('/', apiRoute);
-    // server.use('/home', homeRoute);
-    // server.use('/error', errorRoute);
 }
 
 module.exports = {

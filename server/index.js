@@ -2,9 +2,7 @@
 
 const express = require('express');
 const bodyParser = require('body-parser');
-// const cors = require('cors');
-// const path = require('path');
-const controller = require('./services/db');
+const controller = require('./database/db');
 
 module.exports = function () {
 
@@ -25,7 +23,6 @@ module.exports = function () {
 
     //Returns middleware that parses json
     server.use(bodyParser.json());
-    // server.use(cors());
 
     routes.init(server);
   };
