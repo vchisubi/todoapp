@@ -3,79 +3,81 @@
 const db = require('../../database/db')
 const collection = 'todolist';
 
-let currId = 1;
-
-const getList = (req,res) => {
-  db.getDB().collection(collection).find({}).toArray((err,documents) => {
-		if(err)
-			console.log(err);
-		else{
-			res.json(documents);
-		}
-	});
-};
-
-const getTask = (req,res) => {
-  let targetId = parseInt(req.params.id);
-  db.getDB().collection(collection).find({"id" : targetId}).toArray((err,document) => {
-    if(err)
-        console.log(err);
-    else
-        res.json(document);
+const getList = async () => {
+  return new Promise((resolve, reject) => {
+    db.getDB().collection(collection).find({}).toArray((err, documents) => {
+      if (err)
+        reject(err);
+      else {
+        resolve(documents || {});
+      }
+    });
   });
 };
 
-const createTask = (req,res) => {
-  const userInput = req.body;
-  const task = userInput.title;
-
-  let response = {'id':currId, 'title':task, 'completed':false};
-
-  db.getDB().collection(collection).insertOne(response, (err,result) => {
-		if(err)
-			console.log(err);
-		else{
-      currId++;
-      res.json(response);
-		}
-	});
-};
-
-const updateTask = (req,res) => {
-  let targetId = parseInt(req.params.id);
-  const userInput = req.body;
-  const toggle = userInput.completed;
-  db.getDB().collection(collection).findOneAndUpdate({"id" : targetId},{$set : {"completed" : toggle}},{returnOriginal : false},(err,result) => {
-    if(err)
-        console.log(err);
-    else
-        res.json(result);
+const getTask = (taskId) => {
+  return new Promise((resolve, reject) => {
+    db.getDB().collection(collection).find({ "id": taskId }).toArray((err, document) => {
+      if (err)
+        reject(err);
+      else
+        resolve(document || {});
+    });
   });
 };
 
-const deleteAllTasks = (req,res) => {
-  db.getDB().collection(collection).deleteMany({}).then(result => {
-    res.send(result);
+const createTask = (task) => {
+  return new Promise((resolve, reject) => {
+    db.getDB().collection(collection).insertOne(task, (err, result) => {
+      if (err)
+        reject(err);
+      else {
+        //currId++;
+        resolve(result || {});
+      }
+    });
   });
-  currId = 1;
 };
 
-const deleteTask = (req,res) => {
-  console.log('Deleting task with id: ' + req.params.id);
-  let targetId = parseInt(req.params.id);
-  db.getDB().collection(collection).findOneAndDelete({"id" : targetId}, (err,result) => {
-    if(err)
-      console.log(err);
-    else
-      res.json(result);
+const updateTask = async (taskId, toggle) => {
+  return new Promise((resolve, reject) => {
+    db.getDB().collection(collection).findOneAndUpdate({ "id": taskId }, { $set: { "completed": toggle } }, { returnOriginal: false }, (err, result) => {
+      if (err)
+        reject(err);
+      else
+        resolve(result || {});
+    });
+  });
+};
+
+const deleteAllTasks = async () => {
+  console.log('Deleting all tasks');
+
+  return new Promise((resolve, reject) => {
+    db.getDB().collection(collection).deleteMany({}).then(result => {
+      resolve(result || {});
+    });
+  });
+};
+
+const deleteTask = async (taskId) => {
+  console.log('Deleting task with id: ' + taskId);
+
+  return new Promise((resolve, reject) => {
+    db.getDB().collection(collection).findOneAndDelete({ "id": taskId }, (err, result) => {
+      if(err)
+        reject(err);
+      else
+        resolve(result || {});
+    });
   });
 };
 
 module.exports = {
   getList: getList,
   getTask: getTask,
-	createTask: createTask,
-	updateTask: updateTask,
-  delAllTasks: deleteAllTasks,
+  createTask: createTask,
+  updateTask: updateTask,
+  deleteAllTasks: deleteAllTasks,
   deleteTask: deleteTask,
 };

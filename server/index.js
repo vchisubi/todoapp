@@ -18,7 +18,7 @@ module.exports = function () {
 
     //Displays the index.html in browser
     server.get('/', (req, res, next) => {
-      res.sendFile(dir + '/index.html');
+      res.sendFile(dir + '/client/index.html');
     });
 
     //Returns middleware that parses json
